@@ -24,7 +24,16 @@ public class ChatbotController {
     }
     @PostMapping("/groq")
     public ResponseEntity<String> getAiResponseFromGroq(@RequestParam("query") String query){
-        return ResponseEntity.ok(chatClient.prompt(query).call().content());
+        String systemPrompt = """
+        You are GreenCart Assistant, a helpful chatbot for GreenCart — 
+        an online fresh grocery store that sells organic vegetables and fruits.
+        Only answer questions related to GreenCart such as products, pricing, 
+        delivery, orders, offers, and the website.
+        If someone asks something unrelated to GreenCart, politely say:
+        "I can only help with GreenCart related questions!"
+        Keep answers short, friendly and helpful.
+        """;
+        return ResponseEntity.ok(chatClient.prompt().system(systemPrompt).user(query).call().content());
 
     }
 
