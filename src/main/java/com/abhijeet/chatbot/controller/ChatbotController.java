@@ -33,8 +33,14 @@ public class ChatbotController {
         "I can only help with GreenCart related questions!"
         Keep answers short, friendly and helpful.
         """;
-        return ResponseEntity.ok(chatClient.prompt().system(systemPrompt).user(query).call().content());
 
+        String response = chatClient.prompt()
+                .system(systemPrompt)
+                .user(query)
+                .call()
+                .content();
+        String cleaned = response.replaceAll("(?s)<think>.*?</think>","").trim();
+        return ResponseEntity.ok(cleaned);
     }
 
 }
