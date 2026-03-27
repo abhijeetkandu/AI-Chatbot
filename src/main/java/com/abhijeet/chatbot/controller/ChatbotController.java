@@ -1,5 +1,6 @@
 package com.abhijeet.chatbot.controller;
 
+import com.abhijeet.chatbot.service.ProductService;
 import org.springframework.ai.chat.client.ChatClient;
 
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -15,24 +16,32 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatbotController {
 
     private ChatClient chatClient;
+    private ProductService productService;
 
-    public ChatbotController(ChatClient.Builder chatClientBuilder){
+    public ChatbotController(ChatClient.Builder chatClientBuilder, ProductService productService){
         this.chatClient = chatClientBuilder
                 .defaultAdvisors(new SimpleLoggerAdvisor())
                 .build();
-
+        this.productService = productService;
     }
     @PostMapping("/groq")
     public ResponseEntity<String> getAiResponseFromGroq(@RequestParam("query") String query){
+        String products = productService.getProductsAsText();
         String systemPrompt = """
-        You are GreenCart Assistant, a helpful chatbot for GreenCart — 
-        an online fresh grocery store that sells organic vegetables and fruits.
-        Only answer questions related to GreenCart such as products, pricing, 
-        delivery, orders, offers, and the website.
-        If someone asks something unrelated to GreenCart, politely say:
-        "I can only help with GreenCart related questions!"
-        Keep answers short, friendly and helpful.
-        """;
+            You are GreenCart Assistant, a helpful chatbot for GreenCart —
+            an online fresh grocery store.
+            
+            Here are the EXACT products currently available:
+            """ + products + """
+            
+            IMPORTANT RULES:
+            - Only mention products listed above. Do NOT make up or guess products.
+            - If asked about a product not in the list, say "Sorry, we don't have that product currently."
+            - Only answer questions related to GreenCart such as products, pricing, delivery and orders.
+            - If someone asks something unrelated, say: "I can only help with GreenCart related questions!"
+            - Keep answers short, friendly and helpful.
+            - Never suggest fake URLs or websites.
+            """;
 
         String response = chatClient.prompt()
                 .system(systemPrompt)
